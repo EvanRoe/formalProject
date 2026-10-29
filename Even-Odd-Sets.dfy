@@ -1,7 +1,7 @@
 
 /*** Even ***/
 
- predicate isEven(n: int) {
+ ghost predicate isEven(n: int) {
   exists m: int :: n == 2 * m
 }
 function checkEven(n: int) : (b: bool) {
@@ -41,7 +41,7 @@ lemma EvenTimesAny(n1: int, n2: int)
 
 /*** Odd ***/
 
-predicate isOdd(n: int) {
+ghost predicate isOdd(n: int) {
   exists m: int :: n == 2 * m + 1
 }
 function checkOdd(n: int): (b: bool) {
@@ -91,32 +91,60 @@ lemma InvertParityCorrect(n: int)
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
  // TODO: complete this predicate
+ true
 }
 
 // hint don't use return statements. Set b instead.
 method checkSet(s: seq<int>) returns (b: bool)
   ensures b <==> isSet(s)
-{ // TODO: complete this method
+{ 
+  b := true;
+  var i, j: int := 0, 1;
+  while i < |s| 
+    invariant 0 <= i < |s|
+  {
+    while j < |s|
+      invariant 1 <= j < |s|
+    {
+      if i == j {b := false;}
+    }
+ }
 }
 
 /* An even set is a set where all elements are even */
 predicate isEvenSet(s: seq<int>) {
  // TODO: complete this predicate
+ true
 }
 
 method checkEvenSet(s: seq<int>) returns (b: bool)
   ensures b <==> isEvenSet(s)
-{ // TODO: complete this method
+{ 
+  b := true;
+  var i: int := 0;
+  while i < |s|
+    invariant 0 <= i < |s|
+  {
+    if checkEven(i) {b := false;}
+  }
 }
 
 /* An odd set is a set where all elements are odd */
 predicate isOddSet(s: seq<int>) {
   // TODO: complete this predicate
+  true
 }
 
 method checkOddSet(s: seq<int>) returns (b: bool)
   ensures b <==> isOddSet(s)
-{ // TODO: complete this method
+{ 
+  b := true;
+  var i: int := 0;
+  while i < |s|
+    invariant 0 <= i < |s|
+  {
+    if checkOdd(i) {b := false;}
+  }
 }
 
 /*** Set Operations ***/
@@ -130,6 +158,7 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
   // Marks will be awarded for specifying as much as possible all relevant properties of the output.
   // Hint: You don't need to reimplement addToSet as a function to use in your specification.
+  ensures isSet(b)
 { // TODO: Implement the method
 }
 
