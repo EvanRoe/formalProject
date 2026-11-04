@@ -90,8 +90,7 @@ lemma InvertParityCorrect(n: int)
 
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
- // TODO: complete this predicate
- true
+ forall i,j :: 0 <= i < j < |s| ==> s[i] != s[j] // goes through i,j making sure no dupes
 }
 
 // hint don't use return statements. Set b instead.
@@ -158,8 +157,17 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
   // Marks will be awarded for specifying as much as possible all relevant properties of the output.
   // Hint: You don't need to reimplement addToSet as a function to use in your specification.
-  ensures isSet(b)
+  requires isSet(s)                                 // input must be a set
+  ensures isSet(b)                                  // output must be a set
+  ensures forall x :: x in s ==> x in b             // all original set elements are preserved in new set
+  ensures n in b                                    // the new element is present in the new set
+  ensures forall x :: x in b ==> x in s || x ==n    // nothing else is present in new set b
 { // TODO: Implement the method
+  if n in s{          // if new element is already in original set, new set = original set
+    b := s;
+  } else{
+    b := s + [n]; 
+  }
 }
 
 /* Unions two sets s1 and s2, returning a new set t */
