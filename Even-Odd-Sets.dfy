@@ -131,31 +131,36 @@ predicate isSet(s: seq<int>) {
 
 // hint don't use return statements. Set b instead.
 method checkSet(s: seq<int>) returns (b: bool)
-  //ensures b <==> isSet(s)
+  ensures b <==> isSet(s)                       
 { // TODO: complete this method
-  
    var myArray: seq<int> := [];     // declare a blank array
-
   // iterate throught the array and copy values to another array
   // compare arrays as you copy to find duplicates
+
+
+
   for x := 0 to |s|
+  invariant 0 <= x <= |s|
+  invariant myArray == s[..x]   // at iteration x myArray will be the same as set s up to index x
+  invariant isSet(myArray) == true // myArray only contains nothing or confirmedd non-duplicates so it will always be a set
   {
     var y: int := s[x];             // get the current value of the array iteration
 
     // check if we have already seen it 
     for k := 0 to |myArray|
+    invariant 0 <= k <= |myArray|
+    invariant !(y in myArray[..k]) // we know that up to y is not the same as the previous values up to but not including k position
     {
       if myArray[k] == y
       {
+        assert s[k] == s[x]; // assert that we have found our duplicate
         return false;
       }
     }
-    
-
     // append it to the sequence
     myArray := myArray + [y];       // append it to the sequence 
   }
-
+  assert |myArray| == |s|; //assert the two sets are the same length (not sure if necessary tbh)
   return true;
 }
 
@@ -215,9 +220,18 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
   // Marks will be awarded for specifying as much as possible all relevant properties of the output.
   // Hint: You don't need to reimplement addToSet as a function to use in your specification.
-{ // TODO: Implement the method
 
-  b := s + [n];
+  requires isSet(s)                                 // input must be a set
+  ensures isSet(b)                                  // output must be a set
+  ensures forall x :: x in s ==> x in b             // all original set elements are preserved in new set
+  ensures n in b                                    // the new element is present in the new set
+  ensures forall x :: x in b ==> x in s || x ==n    // nothing else is present in new set b
+{ // TODO: Implement the method
+  if n in s{          // if new element is already in original set, new set = original set
+    b := s;
+  } else{
+    b := s + [n]; 
+  }
 }
 
 /* Unions two sets s1 and s2, returning a new set t */
