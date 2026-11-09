@@ -1,0 +1,57 @@
+# --- LaTeX build files ---
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.dvi
+*.xdv
+
+# Bibliography (BibTeX / biber)
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+
+# Indexes and glossaries
+*.idx
+*.ilg
+*.ind
+*.glo
+*.gls
+*.glg
+*.acn
+*.acr
+*.alg
+*.ist
+
+# Beamer
+*.nav
+*.snm
+*.vrb
+
+# Other common packages
+*.thm
+*.loa
+*.figlist
+*.makefile
+*.listing
+*-blx.bib
+_minted*/
+*.pyg
+*.auxlock
+
+# Compiled PDF (remove this line if you want to commit the PDF)
+*.pdf
+
+# --- Editor / OS junk ---
+.vscode/
+.DS_Store
+Thumbs.db
+*~
+*.swp
