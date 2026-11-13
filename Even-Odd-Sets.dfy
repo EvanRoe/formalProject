@@ -1,16 +1,19 @@
 
-/*** Even ***/
+// /*** Even ***/
 
  ghost predicate isEven(n: int) {
   exists m: int :: n == 2 * m
 }
+
 function checkEven(n: int) : (b: bool) {
 	n % 2 == 0
 }
-// The next three lemmas prove that modulo-based definition is equivalent to existential-based definition
+
+// // The next three lemmas prove that modulo-based definition is equivalent to existential-based definition
 lemma EvenModulo(n: int)
   ensures isEven(n) ==> n % 2 == 0
 {}
+
 lemma ModuloEven(n: int)
   ensures n % 2 == 0 ==> isEven(n)
 {
@@ -19,14 +22,16 @@ lemma ModuloEven(n: int)
 	  assert n == 2 * m; // Hint for Dafny to choose n/2 as witness for the existential in the isEven predicate
 	}
 }
+
 lemma checkEvenCorrect(n: int)
   ensures checkEven(n) <==> isEven(n)
 {
 	EvenModulo(n);
 	ModuloEven(n);
 }
-// Useful lemma that may be used later
-// It shows that the product of two integers is even if at least one of them is even
+// // Useful lemma that may be used later
+// // It shows that the product of two integers is even if at least one of them is even
+
 lemma EvenTimesAny(n1: int, n2: int)
   ensures isEven(n1) || isEven(n2) ==> isEven(n1 * n2)
 {
@@ -39,32 +44,48 @@ lemma EvenTimesAny(n1: int, n2: int)
   }
 }
 
-/*** Odd ***/
-
+// /*** Odd ***/
 ghost predicate isOdd(n: int) {
   exists m: int :: n == 2 * m + 1
 }
 function checkOdd(n: int): (b: bool) {
 	n % 2 != 0
 }
+
+
 lemma OddModulo(n: int)
   ensures isOdd(n) ==> n % 2 != 0
 {}
+
+
 lemma ModuloOdd(n: int)
   ensures n % 2 != 0 ==> isOdd(n)
 { // TODO: complete his proof
+  if n % 2 != 0 {
+    var m := (n-1)/2;
+    assert n == (2 * m) + 1;
+  }
 }
+
 lemma checkOddCorrect(n: int)
   ensures checkOdd(n) <==> isOdd(n)
 { // TODO: complete his proof
+  OddModulo(n);
+	ModuloOdd(n);
 }
+
+
 lemma OddTimesOdd(n1: int, n2: int)
   ensures isOdd(n1) && isOdd(n2) ==> isOdd(n1 * n2)
 { // TODO
+  if isOdd(n1) && isOdd(n2) {
+    var m1 := (n1-1)/ 2;
+    var m2 := (n2-1)/ 2;
+    assert n1 * n2 == 2*(2*m1*m2 + m1 + m2) + 1;
+  }
 }
 
-/*** Even & Odd ***/
-
+// /*** Even & Odd ***/
 lemma NotEvenANDOdd(n: int)
   ensures !(isEven(n) && isOdd(n))
 { 
@@ -73,6 +94,11 @@ lemma NotEvenANDOdd(n: int)
 lemma EvenOrOdd(n: int)
   ensures isEven(n) || isOdd(n)
 { // TODO: complete this proof
+ if isOdd(n) {
+  } else {
+	  var m := n / 2;
+	  assert n == 2 * m;
+  }
 }
 
 function invertParity(n: int): (m: int) {
@@ -83,80 +109,128 @@ lemma InvertParityCorrect(n: int)
   ensures isEven(n) ==> isOdd(invertParity(n))
   ensures isOdd(n) ==> isEven(invertParity(n))
 { // TODO: complete this proof
+  if isEven(n){
+    var m := n/2;
+    var m1 := n + 1;
+    assert m1 == (2*m) + 1;
+  }
+  if isOdd(n){
+    var m := (n/2) + 1;
+    var m1 := n + 1;
+    assert m1 == (2*m);
+  } 
 }
 
 
-/*** Even and Odd Sets ***/
+// /*** Even and Odd Sets ***/
 
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
- forall i,j :: 0 <= i < j < |s| ==> s[i] != s[j] // goes through i,j making sure no dupes
+  forall i,j :: 0 <= i < j < |s| ==> s[i] != s[j] // goes through i,j making sure no dupes
 }
 
 // hint don't use return statements. Set b instead.
 method checkSet(s: seq<int>) returns (b: bool)
-  ensures b <==> isSet(s)
-{ 
-  b := true;
-  var i, j: int := 0, 1;
-  while i < |s| 
-    invariant 0 <= i < |s|
+  ensures b <==> isSet(s)                       
+{ // TODO: complete this method
+   var myArray: seq<int> := [];     // declare a blank array
+  // iterate throught the array and copy values to another array
+  // compare arrays as you copy to find duplicates
+  for x := 0 to |s|
+  invariant 0 <= x <= |s|
+  invariant myArray == s[..x]   // at iteration x myArray will be the same as set s up to index x
+  invariant isSet(myArray) == true // myArray only contains nothing or confirmedd non-duplicates so it will always be a set
   {
-    while j < |s|
-      invariant 1 <= j < |s|
+    var y: int := s[x];             // get the current value of the array iteration
+
+    // check if we have already seen it 
+    for k := 0 to |myArray|
+    invariant 0 <= k <= |myArray|
+    invariant !(y in myArray[..k]) // we know that up to y is not the same as the previous values up to but not including k position
     {
-      if i == j {b := false;}
+      if myArray[k] == y
+      {
+        assert s[k] == s[x]; // assert that we have found our duplicate
+        return false;
+      }
     }
- }
+    // append it to the sequence
+    myArray := myArray + [y];       // append it to the sequence 
+  }
+  assert |myArray| == |s|; //assert the two sets are the same length (not sure if necessary tbh)
+  return true;
 }
 
 /* An even set is a set where all elements are even */
-predicate isEvenSet(s: seq<int>) {
- // TODO: complete this predicate
- true
+ghost predicate isEvenSet(s: seq<int>) {
+  forall i :: 0 <= i < |s| ==> isEven(s[i]) // goes through each element of the sequence ensuring it is even
 }
 
 method checkEvenSet(s: seq<int>) returns (b: bool)
+  requires isSet(s)
   ensures b <==> isEvenSet(s)
-{ 
-  b := true;
-  var i: int := 0;
-  while i < |s|
-    invariant 0 <= i < |s|
+{ // TODO: complete this method
+  var myArray: seq<int> := [];     // declare a blank array
+
+  // iterate throught the array and copy values to another array
+  // compare arrays as you copy to find duplicates
+  for x := 0 to |s|
+  invariant forall j:: 0 <= j < |s[..x]| ==> isEven(s[j])
   {
-    if checkEven(i) {b := false;}
+    var y: int := s[x];             // get the current value of the array iteratio
+    var o: int := (y-1)/2;
+    var e: int := (y)/2;
+
+    if y % 2 != 0{
+      assert s[x] == (2 * o) + 1;
+      return false;
+    }
+    assert s[x] == (2 * e);
   }
+  return true;
 }
 
 /* An odd set is a set where all elements are odd */
-predicate isOddSet(s: seq<int>) {
-  // TODO: complete this predicate
-  true
+ghost predicate isOddSet(s: seq<int>) {
+    forall i :: 0 <= i < |s| ==> isOdd(s[i]) // goes through each element of the sequence ensuring it is odd
 }
 
 method checkOddSet(s: seq<int>) returns (b: bool)
+  requires isSet(s)
   ensures b <==> isOddSet(s)
-{ 
-  b := true;
-  var i: int := 0;
-  while i < |s|
-    invariant 0 <= i < |s|
+{ // TODO: complete this method
+    var myArray: seq<int> := [];     // declare a blank array
+
+  // iterate throught the array and copy values to another array
+  // compare arrays as you copy to find duplicates
+  for x := 0 to |s|
+  invariant forall j:: 0 <= j < |s[..x]| ==> isOdd(s[j])
   {
-    if checkOdd(i) {b := false;}
+    var y: int := s[x];             // get the current value of the array iteratio
+    var o: int := (y-1)/2;
+    var e: int := (y)/2;
+
+    if y % 2 == 0{
+      assert s[x] == (2 * e);
+      return false;
+    }
+    assert s[x] == (2 * o) + 1;
   }
+  return true;
 }
 
-/*** Set Operations ***/
+// /*** Set Operations ***/
 
-// For the following methods specify their behaviour so that your specification characterizes the allowed outputs,
-// and as many relevant properties of the result as you can.
-// Marks will be awarded for specifying as much as possible all relevant properties of the output.
+// // For the following methods specify their behaviour so that your specification characterizes the allowed outputs,
+// // and as many relevant properties of the result as you can.
+// // Marks will be awarded for specifying as much as possible all relevant properties of the output.
 
 /* Adds n to a set s, making sure it remains a set */
 method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
   // Marks will be awarded for specifying as much as possible all relevant properties of the output.
   // Hint: You don't need to reimplement addToSet as a function to use in your specification.
+
   requires isSet(s)                                 // input must be a set
   ensures isSet(b)                                  // output must be a set
   ensures forall x :: x in s ==> x in b             // all original set elements are preserved in new set
@@ -174,36 +248,137 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
 method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
+
+  requires isSet(s1)                                 // input must be a set
+  requires isSet(s2)                                 // input must be a set
+  ensures isSet(t)                                  // output must be a set
+  ensures forall x :: x in s1 ==> x in t             // all original set elements are preserved in new set
+  ensures forall x :: x in s2 ==> x in t             // all original set elements are preserved in new set
+  ensures forall x :: x in t ==> x in s1 || x in s2    // nothing else is present in new set b
 { // TODO: Implement the method
+ 
+ t := s2;
+
+ for x := 0 to |s1|
+ invariant forall j:: 0 <= j < |s1[..x]| ==> (s1[j] in s2) || (s1[j] in t)
+ invariant forall k:: 0 <= k < |s2[..|s2|]| ==> (s2[k] in t)
+ invariant forall l:: 0 <= l < |t[..|t|]| ==> ((t[l] in s2) || (t[l] in s1[..x]))
+ invariant isSet(t)
+  {
+    var y: int := s1[x];             // get the current value of the array iteration
+  
+    // check if we have already seen it 
+    if y in s2 {
+    }else {
+      t := t + [y];
+    }
+  }
 }
 
 /* Intersects two sets s1 and s2, returning a new set t */
 method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
+  requires isSet(s1)                                 // input must be a set
+  requires isSet(s2)                                 // input must be a set
+  ensures isSet(t)                                  // output must be a set
+  ensures forall x :: (x in s1) && (x in s2) ==> x in t             // all original set elements are preserved in new set
+  ensures forall x :: x in t ==> (x in s1) && (x in s2)    // nothing else is present in new set b
 { // TODO: Implement the method
+  t := [];     // declare a blank array
+
+  for x := 0 to |s1|
+  invariant forall j:: 0 <= j < |s1[..x]| && s1[j] in s2 ==> s1[j] in t 
+  invariant forall l:: 0 <= l < |t[..|t|]| ==> ((t[l] in s2) && (t[l] in s1[..x]))
+  invariant isSet(t)
+    {
+      var y: int := s1[x];             // get the current value of the array iteration
+      if y in s2 {
+        t := t + [y];
+      }
+    }
 }
 
 /* Difference of two sets s1 and s2, returning a new set t = s1 - s2 */
 method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
+  requires isSet(s1)                                 // input must be a set
+  requires isSet(s2)                                 // input must be a set
+  ensures isSet(t)                                  // output must be a set
+  ensures forall x :: (x in s1) && !(x in s2) ==> x in t             // all original set elements are preserved in new set
+  ensures forall x :: x in t ==> (x in s1) && !(x in s2)    // nothing else is present in new set b
 { // TODO: Implement the method
+  t := [];     // declare a blank array
+  
+  for x := 0 to |s1|
+  invariant forall j:: 0 <= j < |s1[..x]| && !(s1[j] in s2) ==> s1[j] in t 
+  invariant forall k:: 0 <= k < |t[..|t|]| ==> t[k] in s1[..x]
+  invariant forall k:: 0 <= k < |t[..|t|]| ==> !(t[k] in s2)
+  invariant isSet(t)
+    {
+      var y: int := s1[x];             // get the current value of the array iteration
+      if !(y in s2) {
+        t := t + [y];
+      }
+    }
 }
 
-/* Multiplies each element of a set s by n, returning a new set t */
-method setScale(s: seq<int>, n: int) returns (t: seq<int>)
-// TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
-// and as many relevant properties of the result as you can.
-{ // TODO: Implement the method
-}
+// /* Multiplies each element of a set s by n, returning a new set t */
+// method setScale(s: seq<int>, n: int) returns (t: seq<int>)
+// // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
+// // and as many relevant properties of the result as you can.
+//   requires n != 0
+//   requires isSet(s)                                 // input must be a set
+//   requires forall x :: (x in s) ==> x != 0             // all original set elements are preserved in new set
+//   ensures isSet(t)                                  // output must be a set
+//   ensures forall x :: (x in s) ==> (x*n) in t             // all original set elements are preserved in new set
+//   ensures forall x :: x in t ==> (x/n in s)    // nothing else is present in new set b
+// { // TODO: Implement the method
+//   t := [];     // declare a blank array
+//   var y: int := 0;
 
-/* Computes the product set of two sets s1 and s2, returning a new set t = { n * m | n in s1, m in s2 }  */
-method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
-// TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
-// and as many relevant properties of the result as you can.
-{ // TODO: Implement the method
-}
+//   for x := 0 to |s|
+//   invariant forall j:: 0 <= j < |s[..x]| ==> (s[j]*n) in t 
+//   invariant forall k:: 0 <= k < |t[..|t|]| ==> t[k]/n in s[..x]
+//   invariant isSet(t)
+//     {
+//       y := s[x] * n;
+//       t := t + [y];
+//     }
+// }
+
+// /* Computes the product set of two sets s1 and s2, returning a new set t = { n * m | n in s1, m in s2 }  */
+// method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
+// // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
+// // and as many relevant properties of the result as you can.
+//   requires isSet(s1)                                 // input must be a set
+//   requires isSet(s2)                                 // input must be a set
+//   requires forall x :: (x in s1) ==> x != 0             // all original set elements are preserved in new set
+//   requires forall x :: (x in s2) ==> x != 0             // all original set elements are preserved in new set
+//   requires |s1| == |s2|
+//   ensures isSet(t)                                  // output must be a set
+//   ensures forall x :: x in s1 && forall y :: y in s2 ==> x*y in t
+// { // TODO: Implement the method
+
+//   t := [];     // declare a blank array
+//   for x := 0 to |s1|
+//   invariant forall j:: 0 <= j < |s[..x]| ==> (s[j]*n) in t 
+//   invariant forall k:: 0 <= k < |t[..|t|]| ==> t[k]/n in s[..x]
+//   invariant isSet(t)
+//     {
+//       var y: int := s1[x];             // get the current value of the array iteration
+//       var j: int := 0;
+      
+//       for k := 0 to |s2|
+//         {
+//           var w: int := s2[k];             // get the current value of the array iteration
+//           j := y*w;
+//           assert y/w == j;
+//           t := t + [j];
+//         }
+//     }
+// }
 
 /* Converts an even set to an odd set by inverting the parity of each element  
    Hint: Use the invertParity function */
@@ -211,4 +386,14 @@ method invertParitySet(s: seq<int>) returns (t:seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
 { // TODO: Implement the method
+
+
+  t := [];     // declare a blank array
+  var y: int := 0;
+
+  for x := 0 to |s|
+    {
+      y := invertParity(s[x]);
+      t := t + [y];
+    }
 }
