@@ -324,29 +324,39 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
     }
 }
 
-// /* Multiplies each element of a set s by n, returning a new set t */
-// method setScale(s: seq<int>, n: int) returns (t: seq<int>)
-// // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
-// // and as many relevant properties of the result as you can.
-//   requires n != 0
-//   requires isSet(s)                                 // input must be a set
-//   requires forall x :: (x in s) ==> x != 0             // all original set elements are preserved in new set
-//   ensures isSet(t)                                  // output must be a set
-//   ensures forall x :: (x in s) ==> (x*n) in t             // all original set elements are preserved in new set
-//   ensures forall x :: x in t ==> (x/n in s)    // nothing else is present in new set b
-// { // TODO: Implement the method
-//   t := [];     // declare a blank array
-//   var y: int := 0;
+/* Multiplies each element of a set s by n, returning a new set t */
+method setScale(s: seq<int>, n: int) returns (t: seq<int>)
+// TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
+// and as many relevant properties of the result as you can.
+  requires n != 0
+  requires isSet(s)                                 // input must be a set
+  //requires forall x :: (x in s) ==> x != 0             // all original set elements are preserved in new set
+  ensures isSet(t)                                  // output must be a set
+  ensures forall v :: (v in s) ==> (v*n) in t             // if x is in s, x*n is in t
+  ensures forall y :: y in t ==> exists v :: v in s && y == v * n    // everything in t came from s
+{ // TODO: Implement the method
+  t := [];     // declare a blank array
+  var y: int := 0;
 
-//   for x := 0 to |s|
-//   invariant forall j:: 0 <= j < |s[..x]| ==> (s[j]*n) in t 
-//   invariant forall k:: 0 <= k < |t[..|t|]| ==> t[k]/n in s[..x]
-//   invariant isSet(t)
-//     {
-//       y := s[x] * n;
-//       t := t + [y];
-//     }
-// }
+  for x := 0 to |s|
+    invariant 0 <= x <= |s|
+    invariant isSet(t)
+
+    invariant forall j :: 0 <= j < x ==> (s[j]*n) in t                      // everything processed so far is in t
+    invariant forall k :: k in t ==> exists j :: 0 <= j < x && k == s[j]*n  // everything in t came from processed part of s
+    {
+      assert (s[x] * n) !in t;
+      y := s[x] * n;
+      t := t + [y];
+    }
+  // we explicitly prove the postcondition by linking the index 'j' to the value 's[j]'
+  forall k | k in t
+    ensures exists v :: v in s && k == v * n
+  {
+    var j :| 0 <= j < |s| && k == s[j] * n;
+    assert s[j] in s;
+  }
+}
 
 // /* Computes the product set of two sets s1 and s2, returning a new set t = { n * m | n in s1, m in s2 }  */
 // method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
