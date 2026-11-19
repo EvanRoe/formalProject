@@ -324,46 +324,95 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
  }
 
 // /* multiplies each element of a set s by n, returning a new set t */
-// method setScale(s: seq<int>, n: int) returns (t: seq<int>)
-//   requires isSet(s)
-//   ensures isSet(t)
-//   ensures forall x :: (0 <= x < |t| ==> exists i :: 0<= i < |s| && t[x] == s[i] * n)
-//   ensures forall x :: (0 <= x < |s| ==> s[x] * n in t)
-//   ensures isEvenSet(s) || isEven(n) ==> isEvenSet(t)
-//   ensures isOddSet(s) && isOdd(n) ==> isOddSet(t)
-// { // TODO: fill in your code here and prove method correct
-//   // hint: you may need to call:
-//   //  EvenTimes(s[i], n);
-//   //  OddTimesOdd(s[i], n);
-//   // at the appropriate place in your code to help Dafny prove correctness
-// }
+method setScale(s: seq<int>, n: int) returns (t: seq<int>)
+  requires isSet(s)
+  ensures isSet(t)
+  ensures forall x :: (0 <= x < |t| ==> exists i :: 0 <= i < |s| && t[x] == s[i] * n)
+  ensures forall x :: (0 <= x < |s| ==> s[x] * n in t)
+  ensures isEvenSet(s) || isEven(n) ==> isEvenSet(t)
+  ensures isOddSet(s) && isOdd(n) ==> isOddSet(t)
+{
+  t := [];
 
- method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
-   requires isSet(s1) && isSet(s2)
-   ensures isSet(t)
-   ensures forall x :: x in t ==> exists i1, j1 :: 0<= i1 < |s1| && 0<= j1 < |s2| && x == s1[i1] * s2[j1]
-   ensures forall i1, j1 :: i1 in s1 && j1 in s2 ==> i1 * j1 in t
-   ensures isEvenSet(s1) || isEvenSet(s2) ==> isEvenSet(t)
-   ensures isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
- { 
-   t := [];     // declare a blank array
-   for x := 0 to |s1|
-   invariant forall j:: 0 <= j < |s[..x]| ==> (s[j]*n) in t 
-   invariant forall k:: 0 <= k < |t[..|t|]| ==> t[k]/n in s[..x]
-   invariant isSet(t)
-     {
-       var y: int := s1[x];             // get the current value of the array iteration
-       var j: int := 0;
-    
-       for k := 0 to |s2|
-         {
-           var w: int := s2[k];             // get the current value of the array iteration
-           j := y*w;
-           assert y/w == j;
-           t := t + [j];
-         }
-     }// TODO: fill in your code here and prove method correct
- }
+  for i := 0 to |s|
+    invariant 0 <= i <= |s|
+    invariant isSet(t)
+    invariant forall k :: 0 <= k < |t| ==> exists j :: 0 <= j < i && t[k] == s[j] * n
+    invariant forall j :: 0 <= j < i ==> s[j] * n in t
+    invariant (isEvenSet(s) || isEven(n)) ==> (forall z :: z in t ==> isEven(z))
+    invariant (isOddSet(s) && isOdd(n)) ==> (forall z :: z in t ==> isOdd(z))
+  {
+    var scaled := s[i] * n;
+
+    // Trigger parity lemmas before adding element
+    if isEvenSet(s) {
+      assert s[i] in s;
+      assert isEven(s[i]);
+      EvenTimes(s[i], n);
+      assert isEven(scaled);
+    } else if isEven(n) {
+      EvenTimes(s[i], n);
+      assert isEven(scaled);
+    }
+
+    if isOddSet(s) && isOdd(n) {
+      assert s[i] in s;
+      assert isOdd(s[i]);
+      OddTimesOdd(s[i], n);
+      assert isOdd(scaled);
+    }
+
+    // Append to t while maintaining set uniqueness
+    if scaled !in t {
+      t := t + [scaled];
+    }
+  }
+}
+method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
+  requires isSet(s1) && isSet(s2)
+  ensures isSet(t)
+  ensures forall x :: x in t ==> exists i1, j1 :: 0 <= i1 < |s1| && 0 <= j1 < |s2| && x == s1[i1] * s2[j1]
+  ensures forall i1, j1 :: i1 in s1 && j1 in s2 ==> i1 * j1 in t
+  ensures isEvenSet(s1) || isEvenSet(s2) ==> isEvenSet(t)
+  ensures isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
+{
+  t := [];
+  var i := 0;
+
+  while i < |s1|
+    invariant 0 <= i <= |s1|
+    invariant isSet(t)
+    invariant forall x :: x in t ==> exists i1, j1 :: 0 <= i1 < |s1| && 0 <= j1 < |s2| && x == s1[i1] * s2[j1]
+    invariant forall i1, j1 :: 0 <= i1 < i && 0 <= j1 < |s2| ==> s1[i1] * s2[j1] in t
+    invariant isEvenSet(s1) || isEvenSet(s2) ==> isEvenSet(t)
+    invariant isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
+  {
+    var j := 0;
+    while j < |s2|
+      invariant 0 <= i < |s1|
+      invariant 0 <= j <= |s2|
+      invariant isSet(t)
+      invariant forall x :: x in t ==> exists i1, j1 :: 0 <= i1 < |s1| && 0 <= j1 < |s2| && x == s1[i1] * s2[j1]
+      invariant forall i1, j1 :: 0 <= i1 < i && 0 <= j1 < |s2| ==> s1[i1] * s2[j1] in t
+      invariant forall j1 :: 0 <= j1 < j ==> s1[i] * s2[j1] in t
+      invariant isEvenSet(s1) || isEvenSet(s2) ==> isEvenSet(t)
+      invariant isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
+    {
+      var prod := s1[i] * s2[j];
+      if prod !in t {
+        if isEvenSet(s1) || isEvenSet(s2) {
+          EvenTimes(s1[i], s2[j]);
+        }
+        if isOddSet(s1) && isOddSet(s2) {
+          OddTimesOdd(s1[i], s2[j]);
+        }
+        t := t + [prod];
+      }
+      j := j + 1;
+    }
+    i := i + 1;
+  }
+}
 
 
 // /* converts an even set to an odd set by inverting the parity of each element  */
