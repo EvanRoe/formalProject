@@ -358,37 +358,51 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
   }
 }
 
-// /* Computes the product set of two sets s1 and s2, returning a new set t = { n * m | n in s1, m in s2 }  */
-// method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
-// // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
-// // and as many relevant properties of the result as you can.
-//   requires isSet(s1)                                 // input must be a set
-//   requires isSet(s2)                                 // input must be a set
-//   requires forall x :: (x in s1) ==> x != 0             // all original set elements are preserved in new set
-//   requires forall x :: (x in s2) ==> x != 0             // all original set elements are preserved in new set
-//   requires |s1| == |s2|
-//   ensures isSet(t)                                  // output must be a set
-//   ensures forall x :: x in s1 && forall y :: y in s2 ==> x*y in t
-// { // TODO: Implement the method
-
-//   t := [];     // declare a blank array
-//   for x := 0 to |s1|
-//   invariant forall j:: 0 <= j < |s[..x]| ==> (s[j]*n) in t 
-//   invariant forall k:: 0 <= k < |t[..|t|]| ==> t[k]/n in s[..x]
-//   invariant isSet(t)
-//     {
-//       var y: int := s1[x];             // get the current value of the array iteration
-//       var j: int := 0;
+/* Computes the product set of two sets s1 and s2, returning a new set t = { n * m | n in s1, m in s2 }  */
+method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
+// TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
+// and as many relevant properties of the result as you can.
+  requires isSet(s1)                                 // input must be a set
+  requires isSet(s2)                                 // input must be a set
+  ensures isSet(t)                                  // output must be a set
+  ensures forall x, y :: x in s1 && y in s2 ==> x*y in t                        // If x is in s1 and y is in s2, x*y is in t
+  ensures forall z :: z in t ==> exists x, y :: x in s1 && y in s2 && z == x*y  // Everything in t came from some pair in s1 and s2
+{ // TODO: Implement the method
+  t := [];     // declare a blank array
+  for x := 0 to |s1|
+    invariant 0 <= x <= |s1|
+    invariant isSet(t)
+    invariant forall z :: z in t <==> (exists i, j :: 0 <= i < x && 0 <= j < |s2| && z == s1[i]*s2[j]) // elements in t are exactly the products of the processed rows
+  {
+    var y: int := s1[x];             // get the current value of the array iteration
       
-//       for k := 0 to |s2|
-//         {
-//           var w: int := s2[k];             // get the current value of the array iteration
-//           j := y*w;
-//           assert y/w == j;
-//           t := t + [j];
-//         }
-//     }
-// }
+    for k := 0 to |s2|
+      invariant 0 <= k <= |s2|
+      invariant isSet(t)
+      // The elements in t are the previous rows PLUS the current row up to k
+      invariant forall z :: z in t <==> 
+        (exists i, j :: (0 <= i < x && 0 <= j < |s2| && z == s1[i]*s2[j]) 
+                     || (i == x && 0 <= j < k && z == y*s2[j]))
+
+    {  
+      var w := s2[k];             // get the current value of the array iteration
+      var prod := y * w;
+      
+      if prod !in t {
+        t := t + [prod];
+      }
+    }  
+  }
+  // Final proof block to translate the invariant into the postcondition
+  forall z | z in t
+    ensures exists x, y :: x in s1 && y in s2 && z == x*y
+  {
+    // This tells Dafny that any valid index yields an element in the sequence.
+    // It instantly bridges the gap between 'z == s1[i]*s2[j]' and 's1[i] in s1'.
+    assert forall i :: 0 <= i < |s1| ==> s1[i] in s1;
+    assert forall j :: 0 <= j < |s2| ==> s2[j] in s2;
+  }
+}
 
 /* Converts an even set to an odd set by inverting the parity of each element  
    Hint: Use the invertParity function */
