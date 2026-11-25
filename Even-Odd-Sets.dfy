@@ -330,7 +330,7 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 // and as many relevant properties of the result as you can.
   requires n != 0
   requires isSet(s)                                 // input must be a set
-  //requires forall x :: (x in s) ==> x != 0             // all original set elements are preserved in new set
+  requires forall x :: (x in s) ==> x != 0             // all original set elements are preserved in new set
   ensures isSet(t)                                  // output must be a set
   ensures forall v :: (v in s) ==> (v*n) in t             // if x is in s, x*n is in t
   ensures forall y :: y in t ==> exists v :: v in s && y == v * n    // everything in t came from s
