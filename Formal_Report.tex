@@ -40,14 +40,16 @@
 - Names of team members
 - Brief description of how you collaborated
 
-Team members: Aidan McNally, Enda Benson, Evan Roe
+Team members: Aidan McNally, Enda Benson, Evan Roe.
 
-Collaborated through github repo. Each attempted part 1 and 2. PArt 3 TBD
+Collaborated through github repository. Each member attempted and contributed towards part 1, part 2 was started by Enda and completed by Aidan. Part 3 was completed by Evan and the report was a team effort.
 
 \section{Use of AI Tools}
 
 - Which tools (if any)
 - How they contributed in this part of the project
+
+No AI was used towards part 1, only the given resources for learning Dafny. Part 2 and consequently part 3 used AI to learn more about how Dafny evaluated methods and how it verified them, to better understand the use of invariants and lemmas to help Dafny. 
 
 \section{Code Modifications}
 
@@ -63,6 +65,9 @@ Collaborated through github repo. Each attempted part 1 and 2. PArt 3 TBD
 - How proof attempts changed your understanding of specification and correctness
 - Whether AI helped or slowed you down
 - Any other thoughts on the verification experience
+
+For Part 3 the method that gave the most problems was the setProduct method. The nested loop and the 5 postconditions meant that Dafny needed to search through many loop iterations to verify the method. Many times we were faced with a verification timeout which meant we were not even informed about what part of the method could not be verified. The nested loop also meant that each loop needed its set of invariants, which did not come intuitively to duplicate the invariants over both loops.
+AI definitely helped in this case, because since it was a new programming language essentially, learning its intricacies quickly was made simple with the use of AI. If we were stumped on a method in part 2 or 3, we could turn to AI to learn how Dafny evaluated and verified different postconditions types. Otherwise I expect we would have needed to dig through Dafny documentation to get there.
 
 This report does not need to be long, but should be of reasonable quality.
 
