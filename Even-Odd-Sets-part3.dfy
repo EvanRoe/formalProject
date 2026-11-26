@@ -177,7 +177,6 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
 
     if y % 2 != 0{
       assert !isEven(y);
-      assert !isEvenSet(s);
       return false;
     }
     ModuloEven(y);
@@ -204,7 +203,6 @@ method checkOddSet(s: seq<int>) returns (b: bool)
 
     if y % 2 == 0{
       assert !isOdd(y);
-      assert !isOddSet(s);
       return false;
     }
     ModuloOdd(y);
@@ -313,7 +311,7 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   invariant isEvenSet(s1) && isOddSet(s2) ==> t == s1[..x]
     {
       var y: int := s1[x];
-      NotEvenANDOdd(y);             // get the current value of the array iteration
+      NotEvenANDOdd(y);             
       if !(y in s2) {
         t := t + [y];
       }
@@ -434,16 +432,7 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
       invariant isOddSet(s) ==> forall i :: 0 <= i < x ==> isEven(t[i]) 
         {
           y := invertParity(s[x]);
-          if isEvenSet(s) {
-            assert isEven(s[x]);
-            InvertParityCorrect(s[x]);
-            assert isOdd(y);
-          }
-          if isOddSet(s) {
-            assert isOdd(s[x]);
-            InvertParityCorrect(s[x]);
-            assert isEven(y);
-          }
+          InvertParityCorrect(s[x]);
           t := t + [y];
         }
 //   // hint: you may need to call:

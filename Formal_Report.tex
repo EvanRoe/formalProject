@@ -59,6 +59,232 @@ No AI was used towards part 1, only the given resources for learning Dafny. Part
 - Rationale for the change (why it was needed / how it helped verification)
 - Note: You do not need to track changes to invariants, assertions, ghost code, or other non-computational proof scaffolding.
 
+no changed to checkSet.
+
+checkEvenSet:
+\begin{verbatim}
+  for x := 0 to |s|
+  {
+    var y: int := s[x];             
+    var o: int := (y-1)/2;
+    var e: int := (y)/2;
+
+    if y % 2 != 0{
+      assert s[x] == (2 * o) + 1;
+      return false;
+    }
+    assert s[x] == (2 * e);
+  }
+  return true;
+\end{verbatim}
+turned into this:
+\begin{verbatim}
+ var isS := checkSet(s);
+  if !isS {
+    return false;
+  }
+  for x := 0 to |s|
+  {
+    var y: int := s[x];             
+
+    if y % 2 != 0{
+      assert !isEven(y);
+      return false;
+    }
+    ModuloEven(y);
+  }
+  return true;
+\end{verbatim}
+Reasoning: The first change is to put a set guard, so that the set part of Even set is verified. In this case, some of the body could be rewritten more simply as it was written by a different member. The next change to help verify comes when y is not even, and a predicate is used to tell Dafny that there is a non-even value in the sequence. If all the values pass that clause, then ModuloEven() confirms that it is even, and since we know that it is a set from the first guard, the output must be true.
+
+
+
+checkOddSet:
+\begin{verbatim}
+  for x := 0 to |s|
+  {
+    var y: int := s[x];             
+    var o: int := (y-1)/2;
+    var e: int := (y)/2;
+
+    if y % 2 == 0{
+      assert s[x] == (2 * e);
+      return false;
+    }
+    assert s[x] == (2 * o) + 1;
+  }
+  return true;
+\end{verbatim}
+turned into this:
+\begin{verbatim}
+  var isS := checkSet(s);
+  if !isS {
+    return false;
+  }
+  for x := 0 to |s|
+  {
+    var y: int := s[x];             
+
+    if y % 2 == 0{
+      assert !isOdd(y);
+      return false;
+    }
+    ModuloOdd(y);
+  }
+  return true;
+\end{verbatim}
+Reasoning: This is the opposite case to checkEvenSet, and the reasoning is mirrored. 
+
+No changes to addToSet.
+No changes to union.
+No changes to intersection.
+
+
+difference:
+\begin{verbatim}
+  t := [];     
+  
+  for x := 0 to |s1|
+    {
+      var y: int := s1[x];
+      if !(y in s2) {
+        t := t + [y];
+      }
+    }
+\end{verbatim}
+turned into this:
+\begin{verbatim}
+ t := [];     
+  
+  for x := 0 to |s1|
+    {
+      var y: int := s1[x];
+      NotEvenANDOdd(y);
+      if !(y in s2) {
+        t := t + [y];
+      }
+    }
+\end{verbatim}
+Reasoning: The body stays the same apart from one NotEvenANDOdd() call. Once y is initialised, Dafny does not know that it can't be even and odd at the same time, so NotEvenANDOdd() lets Dafny prove the parity invariants by excluding the idea that y can be both even and odd at the same time, since Dafny only know that 2 isEven, not that 2 !isOdd at the same time. 
+
+setScale:
+\begin{verbatim}
+  t := [];
+  var y: int := 0;
+
+  for x := 0 to |s|
+    {
+      assert (s[x] * n) !in t;
+      y := s[x] * n;
+      t := t + [y];
+    }
+  forall k | k in t
+    ensures exists v :: v in s && k == v * n
+  {
+    var j :| 0 <= j < |s| && k == s[j] * n;
+    assert s[j] in s;
+  }
+\end{verbatim}
+Turned into this:
+\begin{verbatim}
+ t := [];
+
+  for i := 0 to |s|
+  {
+    var scaled := s[i] * n;
+
+    if isEvenSet(s) {
+      assert s[i] in s;
+      assert isEven(s[i]);
+      EvenTimes(s[i], n);
+      assert isEven(scaled);
+    } else if isEven(n) {
+      EvenTimes(s[i], n);
+      assert isEven(scaled);
+    }
+
+    if isOddSet(s) && isOdd(n) {
+      assert s[i] in s;
+      assert isOdd(s[i]);
+      OddTimesOdd(s[i], n);
+      assert isOdd(scaled);
+    }
+
+    if scaled !in t {
+      t := t + [scaled];
+    }
+  } 
+\end{verbatim}
+
+setProduct:
+\begin{verbatim}
+  t := [];
+  for x := 0 to |s1|
+  {
+    var y: int := s1[x];             
+      
+    for k := 0 to |s2|
+    {  
+      var w := s2[k];             
+      var prod := y * w;
+      
+      if prod !in t {
+        t := t + [prod];
+      }
+    }
+\end{verbatim}
+turned into this:
+\begin{verbatim}
+  t := [];
+  var i := 0;
+
+  while i < |s1|
+  {
+    var j := 0;
+    while j < |s2|
+    {
+      var prod := s1[i] * s2[j];
+      if prod !in t {
+        if isEvenSet(s1) || isEvenSet(s2) {
+          EvenTimes(s1[i], s2[j]);
+        }
+        if isOddSet(s1) && isOddSet(s2) {
+          OddTimesOdd(s1[i], s2[j]);
+        }
+        t := t + [prod];
+      }
+      j := j + 1;
+    }
+    i := i + 1;
+  }
+\end{verbatim}
+
+
+invertParitySet:
+\begin{verbatim}
+ t := [];
+var y: int := 0;
+
+for x := 0 to |s|
+  {
+    y := invertParity(s[x]);
+    t := t + [y];
+  } 
+\end{verbatim}
+Turned into this:
+\begin{verbatim}
+  t := [];
+   var y: int := 0;
+
+   for x := 0 to |s|
+    {
+      y := invertParity(s[x]);
+      InvertParityCorrect(s[x]);
+      t := t + [y];
+    }
+\end{verbatim}
+Reasoning: To prove the invariant that prove the parity postconditions, Dafny needs to know that calling invertParity turns an even number into an odd number, which allows it later prove odd set or even set, knowing that an even number into invertParity has to produce an odd number. 
+
 \section{Reflection}
 
 - Which methods were hardest and why

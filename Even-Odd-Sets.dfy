@@ -170,8 +170,6 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
   requires isSet(s)
   ensures b <==> isEvenSet(s)
 { // TODO: complete this method
-  var myArray: seq<int> := [];     // declare a blank array
-
   // iterate throught the array and copy values to another array
   // compare arrays as you copy to find duplicates
   for x := 0 to |s|
@@ -199,8 +197,6 @@ method checkOddSet(s: seq<int>) returns (b: bool)
   requires isSet(s)
   ensures b <==> isOddSet(s)
 { // TODO: complete this method
-    var myArray: seq<int> := [];     // declare a blank array
-
   // iterate throught the array and copy values to another array
   // compare arrays as you copy to find duplicates
   for x := 0 to |s|
