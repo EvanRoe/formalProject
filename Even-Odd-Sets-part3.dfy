@@ -149,16 +149,15 @@ method checkSet(s: seq<int>) returns (b: bool)
       }
     }
     // append it to the sequence
-    myArray := myArray + [y];       // append it to the sequence
+    myArray := myArray + [y];       
   }
-  assert |myArray| == |s|; //assert the two sets are the same length (not sure if necessary tbh)
   return true;
 
 }
 
 // /* An even set is a set where all elements are even */
 ghost predicate isEvenSet(s: seq<int>) {
-  isSet(s) && forall x :: x in s ==> isEven(x) // TODO
+  isSet(s) && forall x :: x in s ==> isEven(x) 
 }
 
 method checkEvenSet(s: seq<int>) returns (b: bool)
@@ -173,7 +172,7 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
     invariant forall j:: 0 <= j < |s[..x]| ==> isEven(s[j])
   {
 
-    var y: int := s[x];             // get the current value of the array iteration
+    var y: int := s[x];             
 
     if y % 2 != 0{
       assert !isEven(y);
@@ -186,12 +185,12 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
 
 // /* An odd set is a set where all elements are odd */
 ghost predicate isOddSet(s: seq<int>) {
-  isSet(s) && forall x :: x in s ==> isOdd(x) // TODO
+  isSet(s) && forall x :: x in s ==> isOdd(x) 
 }
 
 method checkOddSet(s: seq<int>) returns (b: bool)
   ensures b <==> isOddSet(s)
-{ // TODO: fill in your code here and prove method correct
+{ 
   var isS := checkSet(s);
   if !isS {
     return false;
@@ -199,7 +198,7 @@ method checkOddSet(s: seq<int>) returns (b: bool)
   for x := 0 to |s|
     invariant forall j:: 0 <= j < |s[..x]| ==> isOdd(s[j])
   {
-    var y: int := s[x];             // get the current value of the array iteratio
+    var y: int := s[x];            
 
     if y % 2 == 0{
       assert !isOdd(y);
@@ -223,8 +222,8 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   ensures !(n in s) ==> b == s + [n]
   ensures isEvenSet(s) && isEven(n) ==> isEvenSet(b)
   ensures isOddSet(s) && isOdd(n) ==> isOddSet(b)
-{ // TODO: fill in your code here and prove method correct
-  if n in s{          // if new element is already in original set, new set = original set
+{ 
+  if n in s{        
     b := s;
   } else{
     b := s + [n];
@@ -240,7 +239,7 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   ensures forall x :: (0 <= x < |s2| ==> s2[x] in t)
   ensures isEvenSet(s1) && isEvenSet(s2) ==> isEvenSet(t)
   ensures isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
-{ // TODO: fill in your code here and prove method correct
+{ 
   t := s2;
 
   for x := 0 to |s1|
@@ -249,9 +248,9 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
     invariant forall l:: 0 <= l < |t[..|t|]| ==> ((t[l] in s2) || (t[l] in s1[..x]))
     invariant isSet(t)
   {
-    var y: int := s1[x];             // get the current value of the array iteration
+    var y: int := s1[x];         
 
-    // check if we have already seen it
+    
     if y in s2 {
     }else {
       t := t + [y];
@@ -268,8 +267,8 @@ method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   ensures isEvenSet(s1) ==> isEvenSet(t)
   ensures isOddSet(s1) ==> isOddSet(t)
   ensures isEvenSet(s1) && isOddSet(s2) ==> |t| == 0
-{ // TODO: fill in your code here and prove method correct
-  t := [];     // declare a blank array
+{ 
+  t := [];     
 
   for x := 0 to |s1|
     invariant forall j :: 0 <= j < |s1[..x]| && s1[j] in s2 ==> s1[j] in t
@@ -279,14 +278,11 @@ method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
     invariant isOddSet(s1) ==> isOddSet(t)
     invariant isEvenSet(s1) && isOddSet(s2) ==> |t| == 0
   {
-    var y: int := s1[x];             // get the current value of the array iteration
+    var y: int := s1[x];          
     if y in s2 {
       t := t + [y];
     }
   }
-  // hint: you may need to call:
-  //  NotEvenANDOdd(s1[i]);
-  // at the appropriate place in your code to help Dafny prove correctness
 }
 
 // /* difference of two sets s1 and s2, returning a new set t = s1 - s2 */
@@ -297,9 +293,9 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
    ensures forall x :: (0 <= x < |s1| && !(s1[x] in s2)) ==> s1[x] in t
    ensures isEvenSet(s1) ==> isEvenSet(t)
    ensures isOddSet(s1) ==> isOddSet(t)
-   ensures isEvenSet(s1) && isOddSet(s2) ==> t == s1 // hint: don't use addToSet in your code -- use t + [s1[i]] instead
- { // TODO: fill in your code here and prove method correct
-  t := [];     // declare a blank array
+   ensures isEvenSet(s1) && isOddSet(s2) ==> t == s1 
+ { 
+  t := [];     
   
   for x := 0 to |s1|
   invariant forall j:: 0 <= j < |s1[..x]| && !(s1[j] in s2) ==> s1[j] in t 
@@ -316,9 +312,6 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
         t := t + [y];
       }
     }
-//   // hint: you may need to call:
-//   //  NotEvenANDOdd(s1[i]);
-//   // at the appropriate place in your code to help Dafny prove correctness
  }
 
 // /* multiplies each element of a set s by n, returning a new set t */
@@ -340,29 +333,20 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
     invariant (isEvenSet(s) || isEven(n)) ==> (forall z :: z in t ==> isEven(z))
     invariant (isOddSet(s) && isOdd(n)) ==> (forall z :: z in t ==> isOdd(z))
   {
-    var scaled := s[i] * n;
+    var y := s[i] * n;
 
-    // Trigger parity lemmas before adding element
     if isEvenSet(s) {
-      assert s[i] in s;
-      assert isEven(s[i]);
       EvenTimes(s[i], n);
-      assert isEven(scaled);
     } else if isEven(n) {
       EvenTimes(s[i], n);
-      assert isEven(scaled);
     }
 
     if isOddSet(s) && isOdd(n) {
-      assert s[i] in s;
-      assert isOdd(s[i]);
       OddTimesOdd(s[i], n);
-      assert isOdd(scaled);
     }
 
-    // Append to t while maintaining set uniqueness
-    if scaled !in t {
-      t := t + [scaled];
+    if y !in t {
+      t := t + [y];
     }
   }
 }
@@ -420,8 +404,8 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
    ensures isOddSet(s) ==> isEvenSet(t)
    ensures |t| == |s|
    ensures forall i :: 0 <= i < |s| ==> t[i] == invertParity(s[i])
- { // TODO: fill in your code here and prove method correct
-    t := [];     // declare a blank array
+ {
+    t := [];  
       var y: int := 0;
 
       for x := 0 to |s|
@@ -435,7 +419,4 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
           InvertParityCorrect(s[x]);
           t := t + [y];
         }
-//   // hint: you may need to call:
-//   //  InvertParityCorrect(s[i]);
-//   // at the appropriate place in your code to help Dafny prove correctness
  }

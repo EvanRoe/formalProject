@@ -334,15 +334,15 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
   t := [];     // declare a blank array
   var y: int := 0;
 
-  for x := 0 to |s|
-    invariant 0 <= x <= |s|
+  for i := 0 to |s|
+    invariant 0 <= i <= |s|
     invariant isSet(t)
 
-    invariant forall j :: 0 <= j < x ==> (s[j]*n) in t                      // everything processed so far is in t
-    invariant forall k :: k in t ==> exists j :: 0 <= j < x && k == s[j]*n  // everything in t came from processed part of s
+    invariant forall j :: 0 <= j < i ==> (s[j]*n) in t                      // everything processed so far is in t
+    invariant forall k :: k in t ==> exists j :: 0 <= j < i && k == s[j]*n  // everything in t came from processed part of s
     {
-      assert (s[x] * n) !in t;
-      y := s[x] * n;
+      assert (s[i] * n) !in t;
+      y := s[i] * n;
       t := t + [y];
     }
   // we explicitly prove the postcondition by linking the index 'j' to the value 's[j]'
@@ -365,29 +365,30 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   ensures forall z :: z in t ==> exists x, y :: x in s1 && y in s2 && z == x*y  // Everything in t came from some pair in s1 and s2
 { // TODO: Implement the method
   t := [];     // declare a blank array
-  for x := 0 to |s1|
-    invariant 0 <= x <= |s1|
+  var i := 0;
+  while i < |s1|
+    invariant 0 <= i <= |s1|
     invariant isSet(t)
-    invariant forall z :: z in t <==> (exists i, j :: 0 <= i < x && 0 <= j < |s2| && z == s1[i]*s2[j]) // elements in t are exactly the products of the processed rows
+    invariant forall z :: z in t <==> (exists h, k :: 0 <= h < i && 0 <= k < |s2| && z == s1[h]*s2[k]) // elements in t are exactly the products of the processed rows
   {
-    var y: int := s1[x];             // get the current value of the array iteration
-      
-    for k := 0 to |s2|
-      invariant 0 <= k <= |s2|
+    var j := 0;  
+    while j < |s2|
+      invariant 0 <= j <= |s2|
       invariant isSet(t)
       // The elements in t are the previous rows PLUS the current row up to k
       invariant forall z :: z in t <==> 
-        (exists i, j :: (0 <= i < x && 0 <= j < |s2| && z == s1[i]*s2[j]) 
-                     || (i == x && 0 <= j < k && z == y*s2[j]))
+        (exists h, k :: (0 <= h < i && 0 <= k < |s2| && z == s1[h]*s2[k]) 
+                     || (h == i && 0 <= k < j && z == s1[h]*s2[k]))
 
     {  
-      var w := s2[k];             // get the current value of the array iteration
-      var prod := y * w;
+      var prod := s1[i] * s2[j];
       
       if prod !in t {
         t := t + [prod];
       }
+      j := j + 1;
     }  
+    i := i + 1;
   }
   // Final proof block to translate the invariant into the postcondition
   forall z | z in t

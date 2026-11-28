@@ -172,10 +172,10 @@ setScale:
   t := [];
   var y: int := 0;
 
-  for x := 0 to |s|
+  for i := 0 to |s|
     {
-      assert (s[x] * n) !in t;
-      y := s[x] * n;
+      assert (s[i] * n) !in t;
+      y := s[i] * n;
       t := t + [y];
     }
   forall k | k in t
@@ -191,42 +191,36 @@ Turned into this:
 
   for i := 0 to |s|
   {
-    var scaled := s[i] * n;
+    var y := s[i] * n;
 
     if isEvenSet(s) {
-      assert s[i] in s;
-      assert isEven(s[i]);
       EvenTimes(s[i], n);
-      assert isEven(scaled);
     } else if isEven(n) {
       EvenTimes(s[i], n);
-      assert isEven(scaled);
     }
 
     if isOddSet(s) && isOdd(n) {
-      assert s[i] in s;
-      assert isOdd(s[i]);
       OddTimesOdd(s[i], n);
-      assert isOdd(scaled);
     }
 
     if scaled !in t {
-      t := t + [scaled];
+      t := t + [y];
     }
   } 
 \end{verbatim}
+Reasoning: After copying the code into the part 3 block, we soon realised that the forall and assert lines at the end did not help Dafny verify any of the new pre- and postconditions, so those could be quickly removed. Dafny highlighted the last two postconditions as the problems, and with some trial and error, the two if blocks in the middle finally helped prove those postconditions. The two blocks use the left hand side of the postconditions as guards, and then help to confirm that the new value y is the right parity before going into t.
+
 
 setProduct:
 \begin{verbatim}
   t := [];
-  for x := 0 to |s1|
+  var i := 0;
+  while i < |s1|
   {
-    var y: int := s1[x];             
-      
-    for k := 0 to |s2|
+    var j := 0;
+    while j < |s2|
     {  
-      var w := s2[k];             
-      var prod := y * w;
+      var prod := s1[i] * s2[j];
       
       if prod !in t {
         t := t + [prod];
@@ -258,6 +252,7 @@ turned into this:
     i := i + 1;
   }
 \end{verbatim}
+Reasoning: Here the purpose of the changes were to satisfy the last two postconditions, where for s1 being an even set then t had to be and if both input sets were odd sets then t would have to be too. Those if statements take the postconditions as guards, and if they're true then it confirms that the product is even for the first one, confirming that prod must be even, and odd for the second one, confirming that prod must be odd. This helps dafny verify the parity of the to be added value. 
 
 
 invertParitySet:
@@ -294,13 +289,5 @@ Reasoning: To prove the invariant that prove the parity postconditions, Dafny ne
 
 For Part 3 the method that gave the most problems was the setProduct method. The nested loop and the 5 postconditions meant that Dafny needed to search through many loop iterations to verify the method. Many times we were faced with a verification timeout which meant we were not even informed about what part of the method could not be verified. The nested loop also meant that each loop needed its set of invariants, which did not come intuitively to duplicate the invariants over both loops.
 AI definitely helped in this case, because since it was a new programming language essentially, learning its intricacies quickly was made simple with the use of AI. If we were stumped on a method in part 2 or 3, we could turn to AI to learn how Dafny evaluated and verified different postconditions types. Otherwise I expect we would have needed to dig through Dafny documentation to get there.
-
-This report does not need to be long, but should be of reasonable quality.
-
-You should submit to blackboard two files before the deadline Dec. 01, 2026
-Even-Odd-Sets-part3.dfy 
-2/3 of Part 3 mark distributed on successful verification of each given pre-/post-condition
-Your report in PDF format
-1/3 of Part 3 mark
 
 \end{document}
